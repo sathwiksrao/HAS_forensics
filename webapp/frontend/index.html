@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAS-Forensics Web App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="title">HAS-Forensics</h1>
+                <p class="subtitle">Region-Level Localization of AI-Generated Handwriting</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="downloadResults('all')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download All Results
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="stat-completed">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-running">0</div>
+                <div class="stat-label">Running</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-pending">9</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stat-failed">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Steps Grid -->
+            <div class="steps-section">
+                <h2 class="section-title">Pipeline Steps</h2>
+                <div class="steps-grid" id="steps-grid">
+                    <!-- Step cards will be injected here -->
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section">
+                <h2 class="section-title">Results</h2>
+                <div class="results-grid" id="results-grid">
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h3>Classifier Metrics</h3>
+                            <span class="badge badge-pending">Waiting</span>
+                        </div>
+                        <div class="result-content" id="result-classifier">
+                            <p class="placeholder">Run Step 7 to see results</p>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h3>Localization Metrics</h3>
+                            <span class="badge badge-pending">Waiting</span>
+                        </div>
+                        <div class="result-content" id="result-localization">
+                            <p class="placeholder">Run Step 8 to see results</p>
+                        </div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-header">
+                            <h3>Method Comparison</h3>
+                            <span class="badge badge-pending">Waiting</span>
+                        </div>
+                        <div class="result-content" id="result-comparison">
+                            <p class="placeholder">Run Step 9 to see results</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Section -->
+            <div class="history-section">
+                <h2 class="section-title">Run History</h2>
+                <div class="history-list" id="history-list">
+                    <p class="placeholder">No runs yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Processing...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

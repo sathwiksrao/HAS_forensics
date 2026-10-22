@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAS-Forensics Inference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        .nav-link {
+            background: white;
+            color: #667eea;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #f0f0f0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f7fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #ebf8ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #a0aec0;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+
+        .btn-primary:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .result-image-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .verdict {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .verdict-human {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .verdict-ai {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .verdict-hybrid {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .regions-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .region-item {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .region-item:last-child {
+            border-bottom: none;
+        }
+
+        .region-info {
+            flex: 1;
+        }
+
+        .region-id {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .region-prediction {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .region-confidence {
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-human {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-ai {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .spinner {
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .legend-human {
+            background: #00ff00;
+        }
+
+        .legend-ai {
+            background: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>HAS-Forensics Inference</h1>
+                <p class="subtitle">Upload a handwriting image to detect AI-generated regions</p>
+            </div>
+            <a href="/" class="nav-link">← Back to Dashboard</a>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="card">
+                <h2>Upload Image</h2>
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">Drag & drop an image here</div>
+                    <div class="upload-subtext">or click to browse (PNG, JPG)</div>
+                    <input type="file" id="file-input" accept=".png,.jpg,.jpeg">
+                </div>
+                <div id="file-info" style="margin-top: 16px; color: #64748b; display: none;">
+                    Selected: <span id="file-name"></span>
+                </div>
+                <button class="btn btn-primary" id="analyze-btn" disabled>
+                    Analyze Image
+                </button>
+                <div id="error-container"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="card">
+                <h2>Results</h2>
+                <div id="results-container">
+                    <p style="color: #a0aec0; text-align: center; padding: 40px;">
+                        Upload an image to see results
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const resultsContainer = document.getElementById('results-container');
+        const errorContainer = document.getElementById('error-container');
+
+        let selectedFile = null;
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+            
+            if (!validTypes.includes(file.type)) {
+                showError('Please upload a PNG or JPG image.');
+                return;
+            }
+
+            selectedFile = file;
+            fileName.textContent = file.name;
+            fileInfo.style.display = 'block';
+            analyzeBtn.disabled = false;
+            errorContainer.innerHTML = '';
+        }
+
+        analyzeBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            analyzeBtn.disabled = true;
+            resultsContainer.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing image...</p>
+                </div>
+            `;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/api/inference/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+
+                displayResults(data);
+            } catch (error) {
+                showError(error.message);
+                resultsContainer.innerHTML = `
+                    <p style="color: #a0aec0; text-align: center; padding: 40px;">
+                        Upload an image to see results
+                    </p>
+                `;
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            const verdictText = data.verdict || data.overall_verdict || 'Unknown';
+            const verdictClass = verdictText.includes('AI') && !verdictText.includes('Hybrid')
+                ? 'verdict-ai'
+                : verdictText.includes('Hybrid')
+                    ? 'verdict-hybrid'
+                    : 'verdict-human';
+            const confidencePercent = ((data.confidence || 0) * 100).toFixed(1);
+
+            resultsContainer.innerHTML = `
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color legend-human"></div>
+                        <span>Human</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-ai"></div>
+                        <span>AI-generated</span>
+                    </div>
+                </div>
+
+                <div class="result-image-container">
+                    <img src="${data.result_image_url}" alt="Analysis Result" class="result-image">
+                </div>
+
+                <div class="verdict ${verdictClass}">
+                    ${verdictText}
+                </div>
+                <div class="region-confidence" style="margin-bottom: 16px; text-align: center; color: #475569;">
+                    Confidence: ${confidencePercent}%
+                </div>
+                ${data.mode === 'whole_image_fallback' ? `<div style="text-align: center; color: #64748b; margin-bottom: 16px; font-size: 0.95rem;">Whole-image fallback used because no regions were detected.</div>` : ''}
+
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value">${data.total_regions}</div>
+                        <div class="stat-label">Total Regions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${(data.ai_ratio * 100).toFixed(1)}%</div>
+                        <div class="stat-label">AI Content</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.ai_regions}</div>
+                        <div class="stat-label">AI Regions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${data.human_regions}</div>
+                        <div class="stat-label">Human Regions</div>
+                    </div>
+                </div>
+
+                <h3 style="color: #1e293b; margin-bottom: 12px; font-size: 1.2rem;">Region Details</h3>
+                <div class="regions-list">
+                    ${data.regions.map(region => `
+                        <div class="region-item">
+                            <div class="region-info">
+                                <div class="region-id">Region ${region.region_id + 1}</div>
+                                <div class="region-prediction">${region.prediction.toUpperCase()}</div>
+                                <div class="region-confidence">Confidence: ${(region.confidence * 100).toFixed(1)}%</div>
+                            </div>
+                            <span class="badge badge-${region.prediction}">
+                                ${region.prediction.toUpperCase()}
+                            </span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            errorContainer.innerHTML = `
+                <div class="error-message">
+                    ${message}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

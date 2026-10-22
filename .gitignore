@@ -1,0 +1,34 @@
+# Python environments and caches
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local environment and logs
+.env
+.env.*
+!.env.example
+*.log
+
+# Generated pipeline data and results
+/ai_batch/
+/baseline_checkpoints/
+/checkpoints/
+/comparison_results/
+/human_samples/
+/hybrid_pages/
+/localization_output/
+/region_dataset/
+/results_site/
+/segmentation_output/
+/static/inference_results/
+/tmp_verify_inference.py
+
+# Operating system files
+.DS_Store
+Thumbs.db

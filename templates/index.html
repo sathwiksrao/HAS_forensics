@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAS-Forensics Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        .nav-link {
+            background: white;
+            color: #667eea;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #f0f0f0;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .step-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .step-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+
+        .status-running {
+            background: #fef3c7;
+            color: #d97706;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-completed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .status-failed {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .step-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .step-description {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+
+        .prereq-warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .prereq-warning.show {
+            display: block;
+        }
+
+        .step-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-run {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-run:hover {
+            background: #5a67d8;
+        }
+
+        .btn-run:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+
+        .btn-run-override {
+            background: #f59e0b;
+            color: white;
+            font-size: 12px;
+        }
+
+        .btn-run-override:hover {
+            background: #d97706;
+        }
+
+        .btn-stop {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background: #dc2626;
+        }
+
+        .btn-reset {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #475569;
+        }
+
+        .output-panel {
+            margin-top: 12px;
+            background: #1e293b;
+            border-radius: 6px;
+            padding: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .output-text {
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .error-text {
+            color: #fca5a5;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin-top: 12px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.running {
+            animation: progress 2s infinite linear;
+        }
+
+        @keyframes progress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        .overall-progress {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .progress-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .stat {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>HAS-Forensics Dashboard</h1>
+                <p class="subtitle">Region-level localization of AI-generated handwriting in hybrid documents</p>
+            </div>
+            <a href="/inference" class="nav-link">Try Inference →</a>
+        </div>
+
+        <div class="overall-progress">
+            <div class="progress-stats">
+                <div class="stat">
+                    <div class="stat-value" id="completed-count">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="running-count">0</div>
+                    <div class="stat-label">Running</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="pending-count">9</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value" id="failed-count">0</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="steps-grid" id="steps-container">
+            <!-- Step cards will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        let eventSources = {};
+
+        function updateStats() {
+            fetch('/api/steps')
+                .then(r => r.json())
+                .then(data => {
+                    let completed = 0;
+                    let running = 0;
+                    let pending = 0;
+                    let failed = 0;
+
+                    for (const step of data.steps) {
+                        const status = data.status[step.id].status;
+                        if (status === 'completed') completed++;
+                        else if (status === 'running') running++;
+                        else if (status === 'pending') pending++;
+                        else if (status === 'failed') failed++;
+                    }
+
+                    document.getElementById('completed-count').textContent = completed;
+                    document.getElementById('running-count').textContent = running;
+                    document.getElementById('pending-count').textContent = pending;
+                    document.getElementById('failed-count').textContent = failed;
+
+                    renderSteps(data);
+                });
+        }
+
+        function renderSteps(data) {
+            const container = document.getElementById('steps-container');
+            container.innerHTML = '';
+
+            data.steps.forEach((step, index) => {
+                const status = data.status[step.id];
+                const isManual = step.command === null;
+                const prereqsMet = step.prerequisites_met;
+                const hasPrereqs = step.prerequisite_folders && Object.keys(step.prerequisite_folders).length > 0;
+
+                const card = document.createElement('div');
+                card.className = 'step-card';
+                card.id = `card-${step.id}`;
+
+                let prereqWarning = '';
+                if (!prereqsMet && hasPrereqs) {
+                    const missing = Object.entries(step.prerequisite_folders)
+                        .filter(([folder, exists]) => !exists)
+                        .map(([folder]) => folder)
+                        .join(', ');
+                    prereqWarning = `<div class="prereq-warning show">⚠️ Missing prerequisites: ${missing}</div>`;
+                }
+
+                let buttons = '';
+                if (isManual) {
+                    buttons = `<button class="btn btn-run" disabled>Manual</button>`;
+                } else {
+                    const isRunning = status.status === 'running';
+                    const runDisabled = !prereqsMet && hasPrereqs && !isRunning;
+                    
+                    buttons = `
+                        <button class="btn btn-run" onclick="runStep('${step.id}')" id="btn-run-${step.id}" ${isRunning ? 'style="display:none;"' : ''} ${runDisabled ? 'disabled' : ''}>
+                            Run
+                        </button>
+                        ${!prereqsMet && hasPrereqs && !isRunning ? `
+                            <button class="btn btn-run-override" onclick="runStep('${step.id}')">
+                                Run Anyway
+                            </button>
+                        ` : ''}
+                        <button class="btn btn-stop" onclick="stopStep('${step.id}')" id="btn-stop-${step.id}" ${isRunning ? '' : 'style="display:none;"'}>
+                            Stop
+                        </button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="step-header">
+                        <div class="step-number">${index + 1}</div>
+                        <div class="step-status status-${status.status}" id="status-${step.id}">
+                            ${status.status}
+                        </div>
+                    </div>
+                    <div class="step-name">${step.name}</div>
+                    <div class="step-description">${step.description}</div>
+                    ${prereqWarning}
+                    
+                    <div class="step-actions">
+                        ${buttons}
+                        <button class="btn btn-reset" onclick="resetStep('${step.id}')">
+                            Reset
+                        </button>
+                    </div>
+
+                    <div class="progress-bar" id="progress-${step.id}" ${status.status === 'running' ? '' : 'style="display:none;"'}>
+                        <div class="progress-fill running"></div>
+                    </div>
+
+                    <div class="output-panel" id="output-${step.id}" ${status.status === 'completed' || status.status === 'failed' ? '' : 'style="display:none;"'}>
+                        <div class="output-text" id="output-text-${step.id}">${escapeHtml(status.output)}</div>
+                        ${status.error ? `<div class="error-text">Error: ${escapeHtml(status.error)}</div>` : ''}
+                    </div>
+                `;
+
+                container.appendChild(card);
+
+                // Start streaming if running
+                if (status.status === 'running' && !eventSources[step.id]) {
+                    startStreaming(step.id);
+                }
+            });
+        }
+
+        function updateStepUI(stepId, status) {
+            const statusEl = document.getElementById(`status-${stepId}`);
+            const runBtn = document.getElementById(`btn-run-${stepId}`);
+            const stopBtn = document.getElementById(`btn-stop-${stepId}`);
+            const progressEl = document.getElementById(`progress-${stepId}`);
+            const outputEl = document.getElementById(`output-${stepId}`);
+            const prereqWarning = document.querySelector(`#card-${stepId} .prereq-warning`);
+
+            if (statusEl) {
+                statusEl.className = `step-status status-${status}`;
+                statusEl.textContent = status;
+            }
+
+            if (runBtn) {
+                runBtn.style.display = status === 'running' ? 'none' : 'inline-block';
+            }
+
+            if (stopBtn) {
+                stopBtn.style.display = status === 'running' ? 'inline-block' : 'none';
+            }
+
+            if (progressEl) {
+                progressEl.style.display = status === 'running' ? 'block' : 'none';
+            }
+
+            if (outputEl) {
+                outputEl.style.display = (status === 'completed' || status === 'failed') ? 'block' : 'none';
+            }
+
+            if (prereqWarning && status === 'completed') {
+                prereqWarning.classList.remove('show');
+            }
+
+            updateStats();
+        }
+
+        function runStep(stepId) {
+            fetch(`/api/run/${stepId}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'started') {
+                        updateStepUI(stepId, 'running');
+                        startStreaming(stepId);
+                    } else if (data.error) {
+                        alert(data.error);
+                    }
+                })
+                .catch(err => {
+                    alert('Failed to run step: ' + err.message);
+                });
+        }
+
+        function stopStep(stepId) {
+            fetch(`/api/stop/${stepId}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'stopped') {
+                        updateStepUI(stepId, 'failed');
+                        if (eventSources[stepId]) {
+                            eventSources[stepId].close();
+                            delete eventSources[stepId];
+                        }
+                    }
+                });
+        }
+
+        function resetStep(stepId) {
+            fetch(`/api/reset/${stepId}`, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'reset') {
+                        updateStepUI(stepId, 'pending');
+                        const outputText = document.getElementById(`output-text-${stepId}`);
+                        if (outputText) outputText.textContent = '';
+                        const outputEl = document.getElementById(`output-${stepId}`);
+                        if (outputEl) outputEl.style.display = 'none';
+                    }
+                });
+        }
+
+        function startStreaming(stepId) {
+            const eventSource = new EventSource(`/api/output/${stepId}`);
+            eventSources[stepId] = eventSource;
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                const outputText = document.getElementById(`output-text-${stepId}`);
+                
+                if (outputText && data.output) {
+                    outputText.textContent = data.output;
+                    // Auto-scroll to bottom
+                    const outputEl = document.getElementById(`output-${stepId}`);
+                    if (outputEl) {
+                        outputEl.scrollTop = outputEl.scrollHeight;
+                    }
+                }
+                
+                if (data.status) {
+                    updateStepUI(stepId, data.status);
+                    eventSource.close();
+                    delete eventSources[stepId];
+                    
+                    if (data.error) {
+                        const outputEl = document.getElementById(`output-${stepId}`);
+                        if (outputEl) {
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'error-text';
+                            errorDiv.textContent = `Error: ${data.error}`;
+                            outputEl.appendChild(errorDiv);
+                        }
+                    }
+                }
+            };
+
+            eventSource.onerror = function() {
+                eventSource.close();
+                delete eventSources[stepId];
+            };
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initial load
+        updateStats();
+
+        // Periodic status refresh
+        setInterval(updateStats, 3000);
+    </script>
+</body>
+</html>
